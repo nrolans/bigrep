@@ -82,11 +82,13 @@ class BigParser:
     casei = ''
     pattern_is_regex = ''
     verbose = ''
+    perfect = False;
 
     def __init__(self,data,keyword,
         color=False,
         casei=False,
         regex=False,
+        perfect=False,
         verbose=False):
 
         # Keyword/pattern to match
@@ -97,6 +99,7 @@ class BigParser:
         self.color = color;
         self.casei = casei;
         self.pattern_is_regex = regex;
+        self.perfect = perfect;
        
         # Set the regex flags
         if self.casei:
@@ -109,8 +112,12 @@ class BigParser:
             self.regex_pat = self.regex_flags+self.keyword
             self.regex_pat_hl = self.regex_flags+'('+self.keyword+')'
         else:
-            self.regex_pat = self.regex_flags+r'(((^|[ ])'+re.escape(self.keyword)+r'([ {]|$)))'
-            self.regex_pat_hl = self.regex_flags+'('+re.escape(self.keyword)+')'
+            if self.perfect:
+                self.regex_pat = self.regex_flags+r'(((^|[ ])'+re.escape(self.keyword)+r'([ {]|$)))'
+                self.regex_pat_hl = self.regex_flags+'('+re.escape(self.keyword)+')'
+            else:
+                self.regex_pat = self.regex_flags+r'('+re.escape(self.keyword)+r')'
+                self.regex_pat_hl = self.regex_pat
         
         # Prepare the compiled regex
         self.regex_obj = re.compile(self.regex_pat)
@@ -187,6 +194,7 @@ parser.add_option("-c", "--color", action='store_true', dest="color", default=Fa
 parser.add_option("-n", "--number", action='store_true', dest="number", default=False,help="Show line numbers")
 parser.add_option("-i", "--casei", action='store_true', dest="casei", default=False,help="Case insensitive")
 parser.add_option("-E", "--regex", action='store_true', dest="regex", default=False,help='Regex pattern')
+parser.add_option("-p", "--perfect", action='store_true', dest="perfect", default=False,help='Perfect matches')
 parser.add_option("-v", "--verbose", action='store_true', dest="verbose", default=False,help='Verbose')
 (options, posit) = parser.parse_args()
 args = options.__dict__
@@ -219,6 +227,7 @@ for file in posit[1:]:
             color=args.get('color'),
             casei=args.get('casei'),
             regex=args.get('regex'),
+            perfect=args.get('perfect'),
             verbose=args.get('verbose')
             )
         bp.run()
