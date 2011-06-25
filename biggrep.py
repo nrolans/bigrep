@@ -148,22 +148,30 @@ class BigParser:
             print "Level: "+str(self.level)+" (stop)"
         
         if self.level == 0:
-            
-            result = self.regex_obj.search(self.cbp.get_buffer())
-            if result != None:
-                buff = self.cbp.get_buffer()
-                if buff[0] == '\n':
-                    buff = buff[1:]
-                
-                if self.color:
-                    self.interesting.append( (self.section_line,self.highlight(buff)) )
-                else:
-                    self.interesting.append( (self.section_line,buff) )
-                
-            self.cbp.clear_buffer()
+            # End of a section, looking for matches
+            self.match_check()
 
     def cb_new_line(self):
         self.line += 1;
+        
+        if self.level == 0:
+            # End of a level0 line (i.e. no {}), looking for matches
+            self.match_check()
+            
+    def match_check(self):
+        """Check whether there is something we like in the buffer"""
+        result = self.regex_obj.search(self.cbp.get_buffer())
+        if result != None:
+            buff = self.cbp.get_buffer()
+            if buff[0] == '\n':
+                buff = buff[1:]
+            
+            if self.color:
+                self.interesting.append( (self.section_line,self.highlight(buff)) )
+            else:
+                self.interesting.append( (self.section_line,buff) )
+            
+        self.cbp.clear_buffer()
 
     def highlight(self,haystack):
         return re.sub(self.regex_pat, self.cb_highlight, haystack)
