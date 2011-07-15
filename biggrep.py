@@ -19,10 +19,20 @@ class CallBackParser:
     data = ''
     datalen = 0
     
-    def __init__(self,data):
+    def __init__(self,data=None,file=None):
+
+        if( data == None and file == None ):
+            raise Exception("No file or data provided")
+
+        if( data != None and file != None ):
+            raise Exception("File and data provided -- mutually exclusive")
+
         self.data = data;
-        self.datalen = len(data)
-        
+        self.file = file;
+
+        if( data != None ):
+            self.datalen = len(data)
+                
     def start_save(self):
         self.save = 1
     
@@ -34,8 +44,14 @@ class CallBackParser:
         
     def get_buffer(self):
         return self.buffer
-        
+    
     def read(self):
+        if self.data != None:
+            return self.read_data()
+        elif self.file != None:
+            return self.read_file()
+    
+    def read_data(self):
         
         i = 0;
         
@@ -61,6 +77,31 @@ class CallBackParser:
         if self.cb_data_stop != None:
             self.cb_data_stop()
 
+    def read_file(self):
+        
+        if self.cb_data_start != None:
+            self.cb_data_start()
+        
+        while(1):
+            
+            char = self.file.read(1)
+            if( char == '' ):
+                break;
+            
+            if( self.save ):
+                self.buffer += char;
+            
+            if( char == self.section_start and self.cb_section_start != None ):
+                self.cb_section_start()
+            
+            elif( char == self.section_stop and self.cb_section_stop != None ):
+                self.cb_section_stop()
+        
+            elif( char == '\n' and self.cb_new_line != None ):
+                self.cb_new_line()
+
+
+
 class BigParser:
 
     interesting = [];
@@ -84,7 +125,10 @@ class BigParser:
     verbose = ''
     perfect = False;
 
-    def __init__(self,data,keyword,
+    def __init__(self,
+        keyword,
+        data=None,      # Give a string to analyse
+        file=None,      # Or an open file handle -- starts parsing where open
         color=False,
         casei=False,
         regex=False,
@@ -121,8 +165,9 @@ class BigParser:
         
         # Prepare the compiled regex
         self.regex_obj = re.compile(self.regex_pat)
-       
-        self.cbp = CallBackParser(data)
+        
+        # CBP object mapping
+        self.cbp = CallBackParser(data=data,file=file)
         self.cbp.cb_data_start = self.cb_data_start
         self.cbp.cb_data_stop = self.cb_data_stop
         self.cbp.cb_section_start = self.cb_section_start
@@ -188,7 +233,7 @@ class BigParser:
         #return data.group(0).replace(self.keyword, '\033[91m'+self.keyword+'\033[0m')
 
 # Option parsing
-usage = "Usage: %prog [options] [files+]\n\nIf no files or - are provided, stdin is used instead."
+usage = "Usage: %prog [options] pattern [files+]\n\nIf no files or - are provided, stdin is used instead."
 parser = OptionParser(usage=usage)
 parser.add_option("-c", "--color", action='store_true', dest="color", default=False,help="Show colours")
 parser.add_option("-n", "--number", action='store_true', dest="number", default=False,help="Show line numbers")
@@ -211,19 +256,18 @@ if len(posit) == 1:
 keyword = posit[0]
 n_files = len(posit)-1
 
-for file in posit[1:]:
+for filename in posit[1:]:
 
     try:
         # Is it stdin or a file
-        if file == '-':
-            data = sys.stdin.read()
+        if filename == '-':
+            file = sys.stdin;
         else:
-            f = open(file,'r')
-            data = f.read()
-            f.close()
-        
+            file = open(filename,'r')
+
         # Search it
-        bp = BigParser(data,keyword,
+        bp = BigParser(keyword,
+            file=file,
             color=args.get('color'),
             casei=args.get('casei'),
             regex=args.get('regex'),
@@ -231,6 +275,9 @@ for file in posit[1:]:
             verbose=args.get('verbose')
             )
         bp.run()
+        
+        if filename != '-':
+            file.close()
         
         # Loop through the matches
         for item in bp.interesting:
