@@ -3,6 +3,7 @@
 import sys
 import re
 import os
+import glob
 from optparse import OptionParser
 
 class CallBackParser:
@@ -232,6 +233,22 @@ class BigParser:
         return re.sub(self.regex_pat_hl,r'\033[91m\1\033[0m',data.group(0))
         #return data.group(0).replace(self.keyword, '\033[91m'+self.keyword+'\033[0m')
 
+def unique_list(seq, idfun=None):  
+    # order preserving 
+    if idfun is None: 
+        def idfun(x): return x 
+    seen = {} 
+    result = [] 
+    for item in seq: 
+        marker = idfun(item) 
+        # in old Python versions: 
+        # if seen.has_key(marker) 
+        # but in new ones: 
+        if marker in seen: continue 
+        seen[marker] = 1 
+        result.append(item) 
+    return result
+
 # Option parsing
 usage = "Usage: %prog [options] pattern [files+]\n\nIf no files or - are provided, stdin is used instead."
 parser = OptionParser(usage=usage)
@@ -253,10 +270,21 @@ if len(posit) == 0:
 if len(posit) == 1:
     posit.append('-');
 
+# Pattern
 keyword = posit[0]
-n_files = len(posit)-1
 
-for filename in posit[1:]:
+# Check whether glob matches anything
+filenames = []
+for item in posit[1:]:
+    glob_files = glob.glob(item) 
+    if len(glob_files) == 0:
+        print >> sys.stderr, "No file found: "+str(item)
+    for file in glob_files:
+        filenames.append(file)
+
+n_files = len(filenames)
+
+for filename in unique_list(filenames):
 
     try:
         # Is it stdin or a file
@@ -281,18 +309,17 @@ for filename in posit[1:]:
         
         # Loop through the matches
         for item in bp.interesting:
-
             # Output formatting
             start_line = item[0]
             for line in item[1].split('\n'):
                 line_prefix = ''
                 if n_files > 1:
-                    line_prefix += os.path.basename(file)+':'
+                    line_prefix += os.path.basename(filename)+':'
                 if args.get('number'):
                     line_prefix += str(start_line)+':'
                     start_line += 1
                 print line_prefix+line
 
     except Exception, e:
-        print e
+        print >> sys.stderr, e
 
