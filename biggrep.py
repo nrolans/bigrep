@@ -288,37 +288,40 @@ for filename in unique_list(filenames):
 
     try:
         # Is it stdin or a file
+        file = None;
         if filename == '-':
             file = sys.stdin;
-        else:
+        elif os.path.isfile(filename):
             file = open(filename,'r')
 
-        # Search it
-        bp = BigParser(keyword,
-            file=file,
-            color=args.get('color'),
-            casei=args.get('casei'),
-            regex=args.get('regex'),
-            perfect=args.get('perfect'),
-            verbose=args.get('verbose')
-            )
-        bp.run()
-        
-        if filename != '-':
-            file.close()
-        
-        # Loop through the matches
-        for item in bp.interesting:
-            # Output formatting
-            start_line = item[0]
-            for line in item[1].split('\n'):
-                line_prefix = ''
-                if n_files > 1:
-                    line_prefix += os.path.basename(filename)+':'
-                if args.get('number'):
-                    line_prefix += str(start_line)+':'
-                    start_line += 1
-                print line_prefix+line
+        if file != None:
+
+            # Search it
+            bp = BigParser(keyword,
+                file=file,
+                color=args.get('color'),
+                casei=args.get('casei'),
+                regex=args.get('regex'),
+                perfect=args.get('perfect'),
+                verbose=args.get('verbose')
+                )
+            bp.run()
+            
+            if filename != '-':
+                file.close()
+            
+            # Loop through the matches
+            for item in bp.interesting:
+                # Output formatting
+                start_line = item[0]
+                for line in item[1].split('\n'):
+                    line_prefix = ''
+                    if n_files > 1:
+                        line_prefix += os.path.basename(filename)+':'
+                    if args.get('number'):
+                        line_prefix += str(start_line)+':'
+                        start_line += 1
+                    print line_prefix+line
 
     except Exception, e:
         print >> sys.stderr, e
