@@ -8,20 +8,20 @@ from optparse import OptionParser
 
 class CallBackParser:
     
-    section_start = '{'
-    section_stop  = '}'
-    cb_data_start = None;
-    cb_data_stop = None;
-    cb_section_start = None
-    cb_section_stop = None
-    cb_new_line = None
-    save = 0;
-    buffer = ''
-    data = ''
-    datalen = 0
-    
     def __init__(self,data=None,file=None):
 
+        self.section_start = '{'
+        self.section_stop  = '}'
+        self.cb_data_start = None;
+        self.cb_data_stop = None;
+        self.cb_section_start = None
+        self.cb_section_stop = None
+        self.cb_new_line = None
+        self.save = 0;
+        self.buffer = ''
+        self.data = ''
+        self.datalen = 0
+    
         if( data == None and file == None ):
             raise Exception("No file or data provided")
 
@@ -105,27 +105,6 @@ class CallBackParser:
 
 class BigParser:
 
-    interesting = [];
-    level = 0
-    cbp = None;
-    keyword = ''
-    line = 1
-    section_line = 0
-    _debug = 0;
-
-    # Regex
-    regex_obj = None;
-    regex_pat = None;
-    regex_pat_hl = None;    # used for highlighting only
-    regex_flags = '';
-
-    # Options
-    color = ''
-    casei = ''
-    pattern_is_regex = ''
-    verbose = ''
-    perfect = False;
-
     def __init__(self,
         keyword,
         data=None,      # Give a string to analyse
@@ -136,8 +115,21 @@ class BigParser:
         perfect=False,
         verbose=False):
 
+        self.level = 0
+        self.line = 1
+        self.section_line = 0
+    
+        # Regex
+        self.regex_obj = None;
+        self.regex_pat = None;
+        self.regex_pat_hl = None;    # used for highlighting only
+        self.regex_flags = '';
+    
         # Keyword/pattern to match
         self.keyword = keyword
+        
+        # Init interesting
+        self.interesting = []
         
         # Options settings
         self._debug = verbose;
