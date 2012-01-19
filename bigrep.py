@@ -2,7 +2,7 @@
 
 # MIT License
 #
-# Copyright (c) 2011 Nicolas Rolans
+# Copyright (c) 2012 Nicolas Rolans
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 # 
@@ -10,6 +10,8 @@
 # 
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
+
+BIGREP_VERSION="0.5"
 
 import sys
 import re
@@ -263,12 +265,19 @@ parser.add_option("-i", "--ignore-case", action='store_true', dest="casei", defa
 parser.add_option("-E", "--extended-regexp", action='store_true', dest="regex", default=False,help='Regex pattern')
 parser.add_option("-w", "--word-regexp", action='store_true', dest="perfect", default=False,help='Perfect matches')
 parser.add_option("-v", "--invert-match", action='store_true', dest="invert", default=False,help='Invert match')
+parser.add_option("-V", "--version", action='store_true', dest="version", default=False,help='Show version number')
 parser.add_option("", "--verbose", action='store_true', dest="verbose", default=False,help='Verbose')
 (options, posit) = parser.parse_args()
 args = options.__dict__
 
+# Show version only?
+if( args.get("version")  ):
+    print "bigrep v"+BIGREP_VERSION 
+    sys.exit(0)       
+
 # Check that we received a keyword/pattern
 if len(posit) == 0:
+    print "bigrep v"+BIGREP_VERSION+"\n"
     parser.print_help()
     sys.exit(1)
 
