@@ -1,5 +1,16 @@
 #!/usr/bin/env python
 
+# MIT License
+#
+# Copyright (c) 2011 Nicolas Rolans
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+
 import sys
 import re
 import os
@@ -113,6 +124,7 @@ class BigParser:
         casei=False,
         regex=False,
         perfect=False,
+        invert=False,
         verbose=False):
 
         self.level = 0
@@ -137,7 +149,8 @@ class BigParser:
         self.casei = casei;
         self.pattern_is_regex = regex;
         self.perfect = perfect;
-       
+        self.invert = invert;
+        
         # Set the regex flags
         if self.casei:
             self.regex_flags = '(?mi)'
@@ -202,11 +215,11 @@ class BigParser:
         if self.level == 0:
             # End of a level0 line (i.e. no {}), looking for matches
             self.match_check()
-            
+
     def match_check(self):
         """Check whether there is something we like in the buffer"""
         result = self.regex_obj.search(self.cbp.get_buffer())
-        if result != None:
+        if (result != None and self.invert == False) or (result == None and self.invert == True):
             buff = self.cbp.get_buffer()
             if buff[0] == '\n':
                 buff = buff[1:]
@@ -215,7 +228,7 @@ class BigParser:
                 self.interesting.append( (self.section_line,self.highlight(buff)) )
             else:
                 self.interesting.append( (self.section_line,buff) )
-            
+
         self.cbp.clear_buffer()
 
     def highlight(self,haystack):
@@ -246,10 +259,11 @@ usage = "Usage: %prog [options] pattern [files+]\n\nIf no files or - are provide
 parser = OptionParser(usage=usage)
 parser.add_option("-c", "--color", action='store_true', dest="color", default=False,help="Show colours")
 parser.add_option("-n", "--number", action='store_true', dest="number", default=False,help="Show line numbers")
-parser.add_option("-i", "--casei", action='store_true', dest="casei", default=False,help="Case insensitive")
-parser.add_option("-E", "--regex", action='store_true', dest="regex", default=False,help='Regex pattern')
-parser.add_option("-p", "--perfect", action='store_true', dest="perfect", default=False,help='Perfect matches')
-parser.add_option("-v", "--verbose", action='store_true', dest="verbose", default=False,help='Verbose')
+parser.add_option("-i", "--ignore-case", action='store_true', dest="casei", default=False,help="Case insensitive")
+parser.add_option("-E", "--extended-regexp", action='store_true', dest="regex", default=False,help='Regex pattern')
+parser.add_option("-w", "--word-regexp", action='store_true', dest="perfect", default=False,help='Perfect matches')
+parser.add_option("-v", "--invert-match", action='store_true', dest="invert", default=False,help='Invert match')
+parser.add_option("", "--verbose", action='store_true', dest="verbose", default=False,help='Verbose')
 (options, posit) = parser.parse_args()
 args = options.__dict__
 
@@ -268,18 +282,22 @@ keyword = posit[0]
 # Check whether glob matches anything
 filenames = []
 for item in posit[1:]:
-    glob_files = glob.glob(item) 
-    if len(glob_files) == 0:
-        print >> sys.stderr, "No file found: "+str(item)
-    for file in glob_files:
-        filenames.append(file)
-
+    if item == '-':
+        filenames.append(item)
+    else:
+        glob_files = glob.glob(item) 
+        if len(glob_files) == 0:
+            print >> sys.stderr, "File not found: "+str(item)
+        for file in glob_files:
+            filenames.append(file)
+    
 n_files = len(filenames)
+
 
 for filename in unique_list(filenames):
 
     try:
-        # Is it stdin or a file
+        # Is it stdin or a file?
         file = None;
         if filename == '-':
             file = sys.stdin;
@@ -295,7 +313,8 @@ for filename in unique_list(filenames):
                 casei=args.get('casei'),
                 regex=args.get('regex'),
                 perfect=args.get('perfect'),
-                verbose=args.get('verbose')
+                verbose=args.get('verbose'),
+                invert=args.get('invert')
                 )
             bp.run()
             
@@ -305,8 +324,8 @@ for filename in unique_list(filenames):
             # Loop through the matches
             for item in bp.interesting:
                 # Output formatting
-                start_line = item[0]
-                for line in item[1].split('\n'):
+                start_line = item[0]                # Line number
+                for line in item[1].split('\n'):    # Actual line content
                     line_prefix = ''
                     if n_files > 1:
                         line_prefix += os.path.basename(filename)+':'
