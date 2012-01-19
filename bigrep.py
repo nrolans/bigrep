@@ -270,7 +270,7 @@ args = options.__dict__
 # Check that we received a keyword/pattern
 if len(posit) == 0:
     parser.print_help()
-    exit(1)
+    sys.exit(1)
 
 # If we don't receive any file (pattern only), read from stdin
 if len(posit) == 1:
