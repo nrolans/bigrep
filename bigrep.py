@@ -370,7 +370,7 @@ for filename in unique_list(filenames):
                 for line in item[1].split('\n'):    # Actual line content
                     line_prefix = ''
                     if n_files > 1:
-                        line_prefix += os.path.basename(filename)+':'
+                        line_prefix += filename+':'
                     if args.get('number'):
                         line_prefix += str(start_line)+':'
                         start_line += 1
