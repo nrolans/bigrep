@@ -270,7 +270,7 @@ class BigParser:
         return re.sub(self.regex_pat, self.cb_highlight, haystack)
     
     def cb_highlight(self,data):
-        return re.sub(self.regex_pat_hl,r'\033[91m\1\033[0m',data.group(0))
+        return re.sub(self.regex_pat_hl, R'\033[91m\1\033[0m',data.group(0))
         #return data.group(0).replace(self.keyword, '\033[91m'+self.keyword+'\033[0m')
 
 # Option parsing
