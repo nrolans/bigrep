@@ -273,22 +273,6 @@ class BigParser:
         return re.sub(self.regex_pat_hl,r'\033[91m\1\033[0m',data.group(0))
         #return data.group(0).replace(self.keyword, '\033[91m'+self.keyword+'\033[0m')
 
-def unique_list(seq, idfun=None):  
-    # order preserving 
-    if idfun is None: 
-        def idfun(x): return x 
-    seen = {} 
-    result = [] 
-    for item in seq: 
-        marker = idfun(item) 
-        # in old Python versions: 
-        # if seen.has_key(marker) 
-        # but in new ones: 
-        if marker in seen: continue 
-        seen[marker] = 1 
-        result.append(item) 
-    return result
-
 # Option parsing
 usage = "Usage: %prog [options] pattern [files+]\n\nIf no files or - are provided, stdin is used instead."
 parser = OptionParser(usage=usage)
@@ -322,21 +306,22 @@ if len(posit) == 1:
 keyword = posit[0]
 
 # Check whether glob matches anything
-filenames = []
+filenames = set()
+n_files = 0
 for item in posit[1:]:
     if item == '-':
-        filenames.append(item)
+        filenames.add(item)
     else:
         glob_files = glob.glob(item) 
         if len(glob_files) == 0:
             print >> sys.stderr, "File not found: "+str(item)
         for file in glob_files:
-            filenames.append(file)
-    
+            filenames.add(file)
+
+filenames = list(filenames)
 n_files = len(filenames)
 
-
-for filename in unique_list(filenames):
+for filename in filenames:
 
     try:
         # Is it stdin or a file?
