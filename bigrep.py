@@ -25,10 +25,14 @@ class CallBackParser:
 
         self.section_start = '{'
         self.section_stop  = '}'
+        self.comment_start = '#'
+        self.comment_stop = '\n'
         self.cb_data_start = None;
         self.cb_data_stop = None;
         self.cb_section_start = None
         self.cb_section_stop = None
+        self.cb_comment_start = None
+        self.cb_comment_stop = None
         self.cb_new_line = None
         self.save = 0;
         self.buffer = ''
@@ -82,6 +86,13 @@ class CallBackParser:
             
             elif( self.data[i] == self.section_stop and self.cb_section_stop != None ):
                 self.cb_section_stop()
+
+            elif( char == self.comment_start and self.cb_comment_start != None):
+                self.cb_comment_start()
+
+            elif( char == self.comment_stop and self.cb_comment_stop != None):
+                self.cb_comment_stop()
+
         
             elif( self.data[i] == '\n' and self.cb_new_line != None ):
                 self.cb_new_line()
@@ -110,7 +121,13 @@ class CallBackParser:
             
             elif( char == self.section_stop and self.cb_section_stop != None ):
                 self.cb_section_stop()
-        
+
+            elif( char == self.comment_start and self.cb_comment_start != None):
+                self.cb_comment_start()
+
+            elif( char == self.comment_stop and self.cb_comment_stop != None):
+                self.cb_comment_stop()
+
             elif( char == '\n' and self.cb_new_line != None ):
                 self.cb_new_line()
 
@@ -132,6 +149,7 @@ class BigParser:
         self.level = 0
         self.line = 1
         self.section_line = 0
+        self.in_comment = False
     
         # Regex
         self.regex_obj = None;
@@ -180,6 +198,8 @@ class BigParser:
         self.cbp.cb_data_stop = self.cb_data_stop
         self.cbp.cb_section_start = self.cb_section_start
         self.cbp.cb_section_stop = self.cb_section_stop
+        self.cbp.cb_comment_start = self.cb_comment_start
+        self.cbp.cb_comment_stop = self.cb_comment_stop
         self.cbp.cb_new_line = self.cb_new_line
         self.cbp.start_save()
         
@@ -198,18 +218,31 @@ class BigParser:
     def cb_section_start(self):
         if self.level == 0:
             self.section_line = self.line
-        self.level += 1
-        if self._debug:
-            print "Level: "+str(self.level)+" (start)"
+        if not self.in_comment:
+            self.level += 1
+            if self._debug:
+                print "Level: "+str(self.level)+" (start)"
 
     def cb_section_stop(self):
-        self.level -= 1
+        if not self.in_comment:            
+            if self._debug:
+                print "Level: "+str(self.level)+" (stop)"
+
+            self.level -= 1
+            
+            if self.level == 0:
+                # End of a section, looking for matches
+                self.match_check()
+
+    def cb_comment_start(self):
+        self.in_comment = True
         if self._debug:
-            print "Level: "+str(self.level)+" (stop)"
-        
-        if self.level == 0:
-            # End of a section, looking for matches
-            self.match_check()
+            print 'Comment start'
+
+    def cb_comment_stop(self):
+        self.in_comment = False
+        if self._debug:
+            print 'Comment stop'
 
     def cb_new_line(self):
         self.line += 1;
