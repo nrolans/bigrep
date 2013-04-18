@@ -92,7 +92,6 @@ class CallBackParser:
 
             elif( char == self.comment_stop and self.cb_comment_stop != None):
                 self.cb_comment_stop()
-
         
             elif( self.data[i] == '\n' and self.cb_new_line != None ):
                 self.cb_new_line()
@@ -128,9 +127,8 @@ class CallBackParser:
             elif( char == self.comment_stop and self.cb_comment_stop != None):
                 self.cb_comment_stop()
 
-            elif( char == '\n' and self.cb_new_line != None ):
+            if( char == '\n' and self.cb_new_line != None ):
                 self.cb_new_line()
-
 
 
 class BigParser:
