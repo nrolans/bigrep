@@ -355,9 +355,15 @@ for filename in filenames:
                 for line in item[1].split('\n'):    # Actual line content
                     line_prefix = ''
                     if n_files > 1:
-                        line_prefix += filename+':'
+                        if args.get('color'):
+                            line_prefix += '\033[35m'+filename+'\033[36m:\033[0m'
+                        else:
+                            line_prefix += filename+':'
                     if args.get('number'):
-                        line_prefix += str(start_line)+':'
+                        if args.get('color'):
+                            line_prefix += '\033[32m'+str(start_line)+'\033[36m:\033[0m'
+                        else:
+                            line_prefix += str(start_line)+':'
                         start_line += 1
                     print line_prefix+line
 
